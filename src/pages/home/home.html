@@ -1,0 +1,25 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>List</ion-title>
+    <ion-buttons end>
+      <button ion-button (click)="newItem()">New Item</button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+
+<ion-list>
+  <ion-item-sliding *ngFor="let item of items">
+    <ion-item>
+      <h2>{{item.title}}</h2>
+      <p>{{item.description}}</p>
+    </ion-item>
+    <ion-item-options>
+      <button ion-button (click)="editItem(item)">Edit</button>
+      <button ion-button color="danger" (click)="deleteItem(item)"> Delete</button>
+    </ion-item-options>
+  </ion-item-sliding>
+</ion-list>
+
+</ion-content>
