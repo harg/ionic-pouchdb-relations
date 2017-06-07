@@ -14,7 +14,7 @@ export class Category {
   title: string
   description: string
 
-  items: Promise<Item[]>
+  items: Item[]
 
   constructor(){
   }

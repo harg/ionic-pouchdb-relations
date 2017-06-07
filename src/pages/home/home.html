@@ -15,7 +15,7 @@
       <h2>{{item.title}}</h2>
       <p>{{item.description}}</p>
       <p>{{item.category_id}}</p>
-      <p>[ {{ (item.category | async)?.title }} ]</p>
+      <p>[ {{ item.category.title }} ]</p>
     </ion-item>
     <ion-item-options>
       <button ion-button (click)="editItem(item)">Edit</button>

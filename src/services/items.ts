@@ -9,7 +9,7 @@ import * as PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
 
 
-export type ItemChange = PouchDB.Core.ChangesResponseChange<Item>;
+//export type ItemChange = PouchDB.Core.ChangesResponseChange<Item>;
 
 @Injectable()
 export class ItemsService {
@@ -44,13 +44,21 @@ export class ItemsService {
     this.db.put(item);
   }
 
-  withCategory(pItems: Promise<Item[]>){
-    return pItems.then((items) => {
+  populateRelationships(pItems: Promise<Item[]>){
+    return pItems
+
+    .then((items) => {
       items.forEach((item, i) => {
-        item.category = this.categoriesService.find(item.category_id)
+         this.categoriesService.find(item.category_id).then(category => item.category = category)
      })
      return items
     })
+
+    // other populate
+    // .then(items => {
+    //   // mutate items
+    //   return items
+    // })
   }
 
   changes() {

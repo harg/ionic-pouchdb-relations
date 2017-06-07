@@ -14,7 +14,7 @@
     <ion-item>
       <h2>{{category.title}}</h2>
       <p>{{category.description}}</p>
-      <div *ngFor="let item of (category.items | async)">
+      <div *ngFor="let item of category.items">
         <p>{{ item.title }}</p>
       </div>
     </ion-item>

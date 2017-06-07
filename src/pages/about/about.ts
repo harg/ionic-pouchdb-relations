@@ -20,7 +20,7 @@ export class AboutPage {
   private async refresh() {
     let docs =  await this.categoriesService.findAll();
     docs.forEach((category, i) => {
-        category.items = this.itemsService.findByCategoryId(category._id)
+      this.itemsService.findByCategoryId(category._id).then(its => category.items = its)
     })
     this.categories = docs;
   }

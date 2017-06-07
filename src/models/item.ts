@@ -17,7 +17,7 @@ export class Item {
   description: string
 
   category_id: string
-  category: Promise<Category>
+  category: Category = new Category
 
   constructor(){
   }

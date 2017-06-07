@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+
 import { AlertController } from 'ionic-angular';
 import { NavController } from 'ionic-angular';
 
@@ -16,20 +18,21 @@ import { Item } from '../../models/item';
 export class HomePage implements OnInit{
 
   items: Item[] = [];
+  data: Observable<Array<Item>>;
 
-  constructor(public navCtrl: NavController, private alertCtrl: AlertController,
+  constructor(private zone: NgZone,public navCtrl: NavController, private alertCtrl: AlertController,
               private itemsService: ItemsService, private categoriesService: CategoriesService) {
+    //this.zone.run(() => {  })
     this.itemsService.changes().subscribe(() => { this.refresh(); });
     this.refresh();
   }
 
   ngOnInit() {
-
+    this.refresh();
   }
 
    private async refresh() {
-
-    this.items =  await this.itemsService.withCategory( this.itemsService.findAll() )
+    this.items =  await this.itemsService.populateRelationships( this.itemsService.findAll() )
 
     //let docs =  await this.itemsService.findAll()
     // docs.forEach((item, i) => {
