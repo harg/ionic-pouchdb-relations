@@ -19,6 +19,10 @@ export class CategoriesService {
     return this.db.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => row.doc));
   }
 
+  find(id: string) {
+    return this.db.get(id).then(doc => doc);
+  }
+
   add(category: Category) {
     this.db.post(category);
   }

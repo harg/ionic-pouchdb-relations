@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AlertController } from 'ionic-angular';
 import { CategoriesService } from '../../services/categories';
 import { Category } from '../../models/category';
+import { ItemsService } from '../../services/items';
 
 @Component({
   selector: 'page-about',
@@ -11,13 +12,17 @@ export class AboutPage {
 
   categories: Category[] = [];
 
-  constructor(private alertCtrl: AlertController, private categoriesService: CategoriesService) {
+  constructor(private alertCtrl: AlertController, private categoriesService: CategoriesService, private itemsService: ItemsService) {
     this.categoriesService.changes().subscribe(() => { this.refresh(); });
     this.refresh();
   }
 
-  private refresh() {
-    this.categoriesService.findAll().then(docs => { this.categories = docs; });
+  private async refresh() {
+    let docs =  await this.categoriesService.findAll();
+    docs.forEach((category, i) => {
+        category.items = this.itemsService.findByCategoryId(category._id)
+    })
+    this.categories = docs;
   }
 
   newCategory() {
