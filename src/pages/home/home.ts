@@ -24,7 +24,6 @@ export class HomePage implements OnInit{
               private itemsService: ItemsService, private categoriesService: CategoriesService) {
     //this.zone.run(() => {  })
     this.itemsService.changes().subscribe(() => { this.refresh(); });
-    this.refresh();
   }
 
   ngOnInit() {
@@ -33,6 +32,10 @@ export class HomePage implements OnInit{
 
    private async refresh() {
     this.items =  await this.itemsService.populateRelationships( this.itemsService.findAll() )
+    //this.items = await this.itemsService.findAll().then(its => this.itemsService.populateRelationships(its))
+
+
+    this.items =  await this.itemsService.findAllPopulated()
 
     //let docs =  await this.itemsService.findAll()
     // docs.forEach((item, i) => {

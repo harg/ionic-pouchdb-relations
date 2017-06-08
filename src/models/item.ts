@@ -8,6 +8,7 @@
 // }
 
 import { Category } from './category';
+import { ItemsService } from '../services/items';
 
 export class Item {
 
@@ -22,8 +23,16 @@ export class Item {
   constructor(){
   }
 
-  log() {
-    console.log(this.title, this.description);
+  populate(model: string, service: ItemsService) {
+    switch (model) {
+      case 'category':
+        service.categoriesService.find(this.category_id).then((cat: any) =>  this.category = cat)
+        break;
+
+      default:
+        break;
+    }
+    return this
   }
 
   static fromDoc(doc:any): Item {

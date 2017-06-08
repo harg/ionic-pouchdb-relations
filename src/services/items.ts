@@ -16,12 +16,16 @@ export class ItemsService {
 
   private db = new PouchDB<Item>('items');
 
-  constructor(private zone: NgZone, private categoriesService: CategoriesService) {
+  constructor(private zone: NgZone, public categoriesService: CategoriesService) {
     //this.db.sync('http://localhost:5984/items', { live: true, retry: false });
   }
 
   findAll() {
     return this.db.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => Item.fromDoc(row.doc)));
+  }
+
+  findAllPopulated() {
+    return this.db.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => Item.fromDoc(row.doc).populate('category', this)));
   }
 
   findByCategoryId(category_id: string) {
