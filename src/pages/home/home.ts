@@ -6,9 +6,8 @@ import { NavController } from 'ionic-angular';
 
 import { ItemNewPage } from '../item_new/item_new';
 
-import { CategoriesService } from '../../services/categories';
-import { Category } from '../../models/category';
-import { ItemsService } from '../../services/items';
+import { DbService } from '../../services/databases';
+
 import { Item } from '../../models/item';
 
 @Component({
@@ -21,9 +20,9 @@ export class HomePage implements OnInit{
   data: Observable<Array<Item>>;
 
   constructor(private zone: NgZone,public navCtrl: NavController, private alertCtrl: AlertController,
-              private itemsService: ItemsService, private categoriesService: CategoriesService) {
+              private dbService: DbService) {
     //this.zone.run(() => {  })
-    this.itemsService.changes().subscribe(() => { this.refresh(); });
+    this.dbService.items().changes().subscribe(() => { this.refresh(); });
   }
 
   ngOnInit() {
@@ -31,11 +30,11 @@ export class HomePage implements OnInit{
   }
 
    private async refresh() {
-    this.items =  await this.itemsService.populateRelationships( this.itemsService.findAll() )
-    //this.items = await this.itemsService.findAll().then(its => this.itemsService.populateRelationships(its))
+    // this.items =  await this.itemsService.populateRelationships( this.itemsService.findAll() )
+    this.items = await this.dbService.items().findAll()
+    this.items = await this.dbService.items().populateRelationships(this.items)
 
-
-    this.items =  await this.itemsService.findAllPopulated()
+    //this.items =  await this.dbService.items().findAll()
 
     //let docs =  await this.itemsService.findAll()
     // docs.forEach((item, i) => {
@@ -95,14 +94,14 @@ export class HomePage implements OnInit{
         },
         {
           text: 'Save',
-          handler: (newItem: Item) => { newItem._id = item._id; newItem._rev = item._rev; this.itemsService.update(newItem); }
+          handler: (newItem: Item) => { newItem._id = item._id; newItem._rev = item._rev; this.dbService.items().update(newItem); }
         }
       ]
     }).present();
   }
 
   deleteItem(item: Item) {
-    this.itemsService.remove(item);
+    this.dbService.items().remove(item);
   }
 
 }

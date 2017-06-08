@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
-import { AlertController } from 'ionic-angular';
-import { CategoriesService } from '../../services/categories';
-import { Category } from '../../models/category';
-import { ItemsService } from '../../services/items';
+import { Component } from '@angular/core'
+import { AlertController } from 'ionic-angular'
+
+import { DbService } from '../../services/databases'
+
+import { Category } from '../../models/category'
+
 
 @Component({
   selector: 'page-about',
@@ -12,15 +14,15 @@ export class AboutPage {
 
   categories: Category[] = [];
 
-  constructor(private alertCtrl: AlertController, private categoriesService: CategoriesService, private itemsService: ItemsService) {
-    this.categoriesService.changes().subscribe(() => { this.refresh(); });
+  constructor(private alertCtrl: AlertController, private dbService: DbService) {
+    this.dbService.categories().changes().subscribe(() => { this.refresh(); });
     this.refresh();
   }
 
   private async refresh() {
-    let docs =  await this.categoriesService.findAll();
+    let docs =  await this.dbService.categories().findAll();
     docs.forEach((category, i) => {
-      this.itemsService.findByCategoryId(category._id).then(its => category.items = its)
+      this.dbService.items().findByCategoryId(category._id).then(its => category.items = its)
     })
     this.categories = docs;
   }
@@ -44,7 +46,7 @@ export class AboutPage {
         },
         {
           text: 'Add',
-          handler: (category: Category) => { this.categoriesService.add(category); }
+          handler: (category: Category) => { this.dbService.categories().add(category); }
         }
       ]
     }).present();
@@ -71,14 +73,14 @@ export class AboutPage {
         },
         {
           text: 'Save',
-          handler: (newCategory: Category) => { newCategory._id = category._id; newCategory._rev = category._rev; this.categoriesService.update(newCategory); }
+          handler: (newCategory: Category) => { newCategory._id = category._id; newCategory._rev = category._rev; this.dbService.categories().update(newCategory); }
         }
       ]
     }).present();
   }
 
   deleteCategory(category: Category) {
-    this.categoriesService.remove(category);
+    this.dbService.categories().remove(category);
   }
 
 }

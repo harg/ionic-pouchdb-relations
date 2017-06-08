@@ -12,8 +12,7 @@ import { TabsPage } from '../pages/tabs/tabs';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
-import { ItemsService } from '../services/items';
-import { CategoriesService } from '../services/categories';
+import { DbService } from '../services/databases';
 
 @NgModule({
   declarations: [
@@ -39,8 +38,7 @@ import { CategoriesService } from '../services/categories';
   providers: [
     StatusBar,
     SplashScreen,
-    ItemsService,
-    CategoriesService,
+    DbService,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]
 })

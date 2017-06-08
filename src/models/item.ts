@@ -1,14 +1,4 @@
-// export interface Item {
-//   _id?: string,
-//   _rev?: string,
-//   title: string,
-//   description: string,
-
-//   category_id: string
-// }
-
 import { Category } from './category';
-import { ItemsService } from '../services/items';
 
 export class Item {
 
@@ -21,18 +11,6 @@ export class Item {
   category: Category = new Category
 
   constructor(){
-  }
-
-  populate(model: string, service: ItemsService) {
-    switch (model) {
-      case 'category':
-        service.categoriesService.find(this.category_id).then((cat: any) =>  this.category = cat)
-        break;
-
-      default:
-        break;
-    }
-    return this
   }
 
   static fromDoc(doc:any): Item {
