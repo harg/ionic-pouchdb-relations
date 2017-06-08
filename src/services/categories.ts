@@ -2,7 +2,10 @@ import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import { Category } from '../models/category';
+
 import * as PouchDB from 'pouchdb';
+import * as PouchDBFind from 'pouchdb-find'
+PouchDB.plugin(PouchDBFind)
 
 export type CategoryChange = PouchDB.Core.ChangesResponseChange<Category>;
 
