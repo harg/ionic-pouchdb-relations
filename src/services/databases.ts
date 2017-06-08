@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core'
 
-import { Databases } from '../interfaces/databases'
+import { Databases } from '../types/databases'
 
 import { Item } from '../models/item'
 import { Category } from '../models/category'
@@ -16,8 +16,8 @@ PouchDB.plugin(PouchDBFind)
 export class DbService {
 
   private _databases: Databases = {
-      items : new PouchDB<Item>('items'),
-      categories : new PouchDB<Category>('categories'),
+      itemDB : new PouchDB<Item>('items'),
+      CategoryDB : new PouchDB<Category>('categories'),
     }
 
  private _categories: CategoriesCollection
@@ -28,11 +28,11 @@ export class DbService {
     this._items = new ItemsCollection(this._databases, this.zone)
   }
 
-  categories() {
+  categoriesCollection() {
       return this._categories
   }
 
-  items() {
+  itemsCollection() {
       return this._items
   }
 

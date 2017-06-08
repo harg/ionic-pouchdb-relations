@@ -2,7 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 
-import { Databases } from '../interfaces/databases'
+import { Databases } from '../types/databases'
 
 import { Item } from '../models/item';
 
@@ -16,7 +16,7 @@ export class ItemsCollection {
   }
 
   findAll() {
-    return this.dbs.items.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => Item.fromDoc(row.doc)));
+    return this.dbs.itemDB.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => Item.fromDoc(row.doc)));
   }
 
   // findAllPopulated() {
@@ -24,7 +24,7 @@ export class ItemsCollection {
   // }
 
   findByCategoryId(category_id: string) {
-    return this.dbs.items.find({
+    return this.dbs.itemDB.find({
       selector: {
         category_id: category_id
       }
@@ -32,15 +32,15 @@ export class ItemsCollection {
   }
 
   add(item: Item) {
-    this.dbs.items.post(item);
+    this.dbs.itemDB.post(item);
   }
 
   remove(item: Item) {
-    this.dbs.items.remove(item._id, item._rev);
+    this.dbs.itemDB.remove(item._id, item._rev);
   }
 
   update(item: Item) {
-    this.dbs.items.put(item);
+    this.dbs.itemDB.put(item);
   }
 
   populateRelationships(items: Item[]){
@@ -48,7 +48,7 @@ export class ItemsCollection {
 
     // .then((items) => {
       items.forEach((item, i) => {
-         this.dbs.categories.get(item.category_id).then(category => item.category = category)
+         this.dbs.CategoryDB.get(item.category_id).then(category => item.category = category)
      })
      return items
     // })
@@ -62,7 +62,7 @@ export class ItemsCollection {
 
   changes() {
     return new Observable<void>((subscriber: Subscriber<void>) => {
-      this.dbs.items.changes({ live: true, since: 'now' })
+      this.dbs.itemDB.changes({ live: true, since: 'now' })
       .on('change', (change) => { this.zone.run(() => { subscriber.next(); }); });
     });
   }

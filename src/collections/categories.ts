@@ -2,7 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 
-import { Databases } from '../interfaces/databases'
+import { Databases } from '../types/databases'
 
 import { Category } from '../models/category';
 
@@ -17,23 +17,23 @@ export class CategoriesCollection {
   }
 
   findAll() {
-    return this.dbs.categories.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => row.doc));
+    return this.dbs.CategoryDB.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => row.doc));
   }
 
   find(id: string) {
-    return this.dbs.categories.get(id).then(doc => doc);
+    return this.dbs.CategoryDB.get(id).then(doc => doc);
   }
 
   add(category: Category) {
-    this.dbs.categories.post(category);
+    this.dbs.CategoryDB.post(category);
   }
 
   remove(category: Category) {
-    this.dbs.categories.remove(category._id, category._rev);
+    this.dbs.CategoryDB.remove(category._id, category._rev);
   }
 
   update(category: Category) {
-    this.dbs.categories.put(category);
+    this.dbs.CategoryDB.put(category);
   }
 
   // populate(category: Category, model: string) {
@@ -49,7 +49,7 @@ export class CategoriesCollection {
 
   changes() {
     return new Observable<void>((subscriber: Subscriber<void>) => {
-      this.dbs.categories.changes({ live: true, since: 'now' })
+      this.dbs.CategoryDB.changes({ live: true, since: 'now' })
       .on('change', (change) => { this.zone.run(() => { subscriber.next(); }); });
     });
   }

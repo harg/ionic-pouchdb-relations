@@ -22,7 +22,7 @@ export class HomePage implements OnInit{
   constructor(private zone: NgZone,public navCtrl: NavController, private alertCtrl: AlertController,
               private dbService: DbService) {
     //this.zone.run(() => {  })
-    this.dbService.items().changes().subscribe(() => { this.refresh(); });
+    this.dbService.itemsCollection().changes().subscribe(() => { this.refresh(); });
   }
 
   ngOnInit() {
@@ -31,8 +31,8 @@ export class HomePage implements OnInit{
 
    private async refresh() {
     // this.items =  await this.itemsService.populateRelationships( this.itemsService.findAll() )
-    this.items = await this.dbService.items().findAll()
-    this.items = await this.dbService.items().populateRelationships(this.items)
+    this.items = await this.dbService.itemsCollection().findAll()
+    this.items = await this.dbService.itemsCollection().populateRelationships(this.items)
 
     //this.items =  await this.dbService.items().findAll()
 
@@ -94,14 +94,14 @@ export class HomePage implements OnInit{
         },
         {
           text: 'Save',
-          handler: (newItem: Item) => { newItem._id = item._id; newItem._rev = item._rev; this.dbService.items().update(newItem); }
+          handler: (newItem: Item) => { newItem._id = item._id; newItem._rev = item._rev; this.dbService.itemsCollection().update(newItem); }
         }
       ]
     }).present();
   }
 
   deleteItem(item: Item) {
-    this.dbService.items().remove(item);
+    this.dbService.itemsCollection().remove(item);
   }
 
 }

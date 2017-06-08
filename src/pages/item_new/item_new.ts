@@ -18,11 +18,11 @@ export class ItemNewPage {
 
   constructor(public navCtrl: NavController, private dbService: DbService) {
     this.item = new Item()
-    this.dbService.categories().findAll().then(docs => { this.categories = docs; })
+    this.dbService.categoriesCollection().findAll().then(docs => { this.categories = docs; })
   }
 
   addItem() {
-    this.dbService.items().add(this.item)
+    this.dbService.itemsCollection().add(this.item)
     this.navCtrl.pop()
   }
 
