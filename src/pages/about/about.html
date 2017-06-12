@@ -12,7 +12,7 @@
 <ion-list>
   <ion-item-sliding *ngFor="let category of categories">
     <ion-item>
-      <h2>{{category.title}}</h2>
+      <h2>{{category.title}} [{{category._id}}]</h2>
       <p>{{category.description}}</p>
       <div *ngFor="let item of category.items">
         <p>{{ item.title }}</p>
