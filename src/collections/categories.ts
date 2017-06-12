@@ -25,6 +25,7 @@ export class CategoriesCollection {
   }
 
   add(category: Category) {
+    category._id = new Date().getTime() + '_' + Math.floor(Math.random() * 10000)
     this.dbs.CategoryDB.post(category);
   }
 
