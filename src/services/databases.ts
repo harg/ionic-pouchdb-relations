@@ -1,4 +1,5 @@
 import { Injectable, NgZone } from '@angular/core'
+import { File } from '@ionic-native/file';
 
 import { Databases } from '../types/databases'
 
@@ -16,25 +17,36 @@ PouchDB.plugin(PouchDBFind)
 export class DbService {
 
   private _databases: Databases = {
-      itemDB : new PouchDB<Item>('items'),
-      CategoryDB : new PouchDB<Category>('categories'),
-    }
+    itemDB: new PouchDB<Item>('items'),
+    CategoryDB: new PouchDB<Category>('categories'),
+  }
 
- private _categories: CategoriesCollection
- private _items: ItemsCollection
+  private _categories: CategoriesCollection
+  private _items: ItemsCollection
 
-  constructor(private zone: NgZone) {
+  constructor(private zone: NgZone, private filePlugin: File) {
     this._categories = new CategoriesCollection(this._databases, this.zone)
     this._items = new ItemsCollection(this._databases, this.zone)
   }
 
   categoriesCollection() {
-      return this._categories
+    return this._categories
   }
 
   itemsCollection() {
-      return this._items
+    return this._items
   }
 
+  async dump() {
+    return Promise.all([
+      this._categories.dumpToFile('categories'),
+      this._items.dumpToFile('items')
+    ]).then(paths => paths);
+  }
+
+  async dumpAllToFiles() {
+    let paths = await this.dump();
+    console.log(paths);
+  }
 
 }

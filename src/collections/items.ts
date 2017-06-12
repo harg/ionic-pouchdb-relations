@@ -1,22 +1,17 @@
-import { Injectable, NgZone } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Subscriber } from 'rxjs/Subscriber';
+import { NgZone } from '@angular/core';
 
+import { BaseCollection } from './base';
 import { Databases } from '../types/databases'
 
 import { Item } from '../models/item';
 
 //export type ItemChange = PouchDB.Core.ChangesResponseChange<Item>;
 
-export class ItemsCollection {
+export class ItemsCollection extends BaseCollection {
 
 
-  constructor(private dbs: Databases, private zone: NgZone) {
-    //this.db.sync('http://localhost:5984/items', { live: true, retry: false });
-  }
-
-  findAll() {
-    return this.dbs.itemDB.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => Item.fromDoc(row.doc)));
+  constructor(dbs: Databases, zone: NgZone) {
+    super(dbs, 'itemDB', zone);
   }
 
   // findAllPopulated() {
@@ -60,11 +55,5 @@ export class ItemsCollection {
     // })
   }
 
-  changes() {
-    return new Observable<void>((subscriber: Subscriber<void>) => {
-      this.dbs.itemDB.changes({ live: true, since: 'now' })
-      .on('change', (change) => { this.zone.run(() => { subscriber.next(); }); });
-    });
-  }
 
 }

@@ -1,6 +1,6 @@
-import { Injectable, NgZone } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Subscriber } from 'rxjs/Subscriber';
+import { NgZone } from '@angular/core';
+
+import { BaseCollection } from './base';
 
 import { Databases } from '../types/databases'
 
@@ -8,20 +8,11 @@ import { Category } from '../models/category';
 
 //export type CategoryChange = PouchDB.Core.ChangesResponseChange<Category>;
 
-//@Injectable()
-export class CategoriesCollection {
+export class CategoriesCollection extends BaseCollection {
 
 
-  constructor(private dbs: Databases, private zone: NgZone) {
-    //this.db.sync('http://localhost:5984/categories', { live: true, retry: false });
-  }
-
-  findAll() {
-    return this.dbs.CategoryDB.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => row.doc));
-  }
-
-  find(id: string) {
-    return this.dbs.CategoryDB.get(id).then(doc => doc);
+  constructor(dbs: Databases, zone: NgZone) {
+    super(dbs, 'CategoryDB', zone);
   }
 
   add(category: Category) {
@@ -48,11 +39,8 @@ export class CategoriesCollection {
   //   }
   // }
 
-  changes() {
-    return new Observable<void>((subscriber: Subscriber<void>) => {
-      this.dbs.CategoryDB.changes({ live: true, since: 'now' })
-      .on('change', (change) => { this.zone.run(() => { subscriber.next(); }); });
-    });
-  }
+
+
+
 
 }

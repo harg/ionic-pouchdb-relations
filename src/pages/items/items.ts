@@ -11,18 +11,18 @@ import { DbService } from '../../services/databases';
 import { Item } from '../../models/item';
 
 @Component({
-  selector: 'page-home',
-  templateUrl: 'home.html'
+  selector: 'page-items',
+  templateUrl: 'items.html'
 })
-export class HomePage implements OnInit{
+export class ItemsPage implements OnInit{
 
   items: Item[] = [];
   data: Observable<Array<Item>>;
 
   constructor(private zone: NgZone,public navCtrl: NavController, private alertCtrl: AlertController,
               private dbService: DbService) {
-    //this.zone.run(() => {  })
     this.dbService.itemsCollection().changes().subscribe(() => { this.refresh(); });
+    this.dbService.categoriesCollection().changes().subscribe(() => { this.refresh(); });
   }
 
   ngOnInit() {

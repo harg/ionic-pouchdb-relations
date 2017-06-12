@@ -1,14 +1,16 @@
 import { Component } from '@angular/core';
-import { HomePage } from '../home/home';
-import { AboutPage } from '../about/about';
+import { ItemsPage } from '../items/items';
+import { CategoriesPage } from '../categories/categories';
+import { DatabasePage } from '../database/database';
 
 @Component({
   templateUrl: 'tabs.html'
 })
 export class TabsPage {
 
-  tabHome: any = HomePage;
-  tabAbout: any = AboutPage;
+  tabItems: any = ItemsPage;
+  tabCategories: any = CategoriesPage;
+  tabDatabase: any = DatabasePage
 
   constructor() { }
 

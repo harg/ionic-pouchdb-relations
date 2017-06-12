@@ -7,15 +7,16 @@ import { Category } from '../../models/category'
 
 
 @Component({
-  selector: 'page-about',
-  templateUrl: 'about.html'
+  selector: 'page-categories',
+  templateUrl: 'categories.html'
 })
-export class AboutPage {
+export class CategoriesPage {
 
   categories: Category[] = [];
 
   constructor(private alertCtrl: AlertController, private dbService: DbService) {
     this.dbService.categoriesCollection().changes().subscribe(() => { this.refresh(); });
+    this.dbService.itemsCollection().changes().subscribe(() => { this.refresh(); });
     this.refresh();
   }
 
