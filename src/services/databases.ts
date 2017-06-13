@@ -14,6 +14,7 @@ import * as PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
 
 import * as JSZip from 'jszip';
+var MemoryStream = require('memorystream');
 
 import { FileUtils } from '../helpers/file-utils';
 
@@ -24,6 +25,8 @@ export class DbService {
     itemDB: new PouchDB<Item>('items'),
     CategoryDB: new PouchDB<Category>('categories'),
   }
+
+  public static DUMPS_DIR = 'dumps/';
 
   private _categories: CategoriesCollection
   private _items: ItemsCollection
@@ -97,11 +100,6 @@ export class DbService {
       console.log(msg);
     })
       .then(blob => {
-        // see FileSaver.js
-        //saveAs(blob, "example.zip");
-        console.log("done !");
-
-        const DUMPS_DIR = 'dumps/';
         let root = this.filePlugin.externalApplicationStorageDirectory;
         let filename = 'dump.zip';
         let dump_path: string;
@@ -109,7 +107,7 @@ export class DbService {
 
         this.filePlugin.resolveDirectoryUrl(root)
           .then(dirEntry => {
-            return this.filePlugin.getDirectory(dirEntry, DUMPS_DIR, { create: true });
+            return this.filePlugin.getDirectory(dirEntry, DbService.DUMPS_DIR, { create: true });
           })
           .then(dirEntry => {
             dump_path = dirEntry.nativeURL;
@@ -125,8 +123,48 @@ export class DbService {
 
           })
           .catch(err => { console.log(err.message); return 'Error!' });
-
       });
+  }
+
+  importArchive(dir: string, zip_file: string) {
+    let root = this.filePlugin.externalApplicationStorageDirectory;
+    this.filePlugin.resolveDirectoryUrl(root)
+      .then(dirEntry => {
+        console.log('getDirectory')
+        return this.filePlugin.getDirectory(dirEntry, DbService.DUMPS_DIR, { create: false });
+      })
+      .then(dirEntry => {
+        console.log('getFile')
+        return this.filePlugin.getFile(dirEntry, zip_file, { create: false });
+      })
+      .then(fileEntry => {
+        console.log('readAsBinary')
+        return this.filePlugin.readAsBinaryString(root + dir, zip_file);
+      })
+      .then(zip_content => {
+        let archive = new JSZip();
+        return archive.loadAsync(zip_content)
+      })
+      .then(zip => {
+        return Promise.all([
+          zip.file('items').async("string"),
+          zip.file('categories').async("string")
+        ]).then(_ => _)
+      })
+      .then(contents => {
+        for (let content of contents){
+          console.log(content);
+          let stream = new MemoryStream(content);
+          if(content.indexOf('items') > -1){
+            console.log('load items')
+            this._databases.itemDB.load(stream).then(res => console.log(res));
+          }
+          if(content.indexOf('categories') > -1){
+            this._databases.CategoryDB.load(stream).then(res => console.log(res));
+          }
+        }
+      })
+      .catch(err => { console.log(err.message); return 'Error!' });
   }
 
 }

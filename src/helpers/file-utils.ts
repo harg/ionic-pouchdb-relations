@@ -34,10 +34,19 @@ export class FileUtils {
       .catch(err => { return err.message });
   }
 
+  public static getDirectory(path: string): string {
+    let parts = path.split('/');
+    return parts.reverse().splice(1).reverse().join('/');
+  }
+
+  public static getFilename(path: string): string {
+    let parts = path.split('/');
+    return parts[parts.length - 1];
+  }
+
   static async getFileContent(path: string) {
-    var parts = path.split('/');
-    var filename = parts[parts.length - 1];
-    var dirname = parts.reverse().splice(1).reverse().join('/');
+    let filename = this.getFilename(path);
+    let dirname = this.getDirectory(path);
     return this.filePlugin.resolveDirectoryUrl(dirname)
       .then(dirEntry => {
         return this.filePlugin.getFile(dirEntry, filename, { create: false, exclusive: false});

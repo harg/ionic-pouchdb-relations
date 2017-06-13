@@ -40,6 +40,10 @@ export class DatabasePage {
     this.dbService.dumpAllToFiles();
   }
 
+  doImportDatabases() {
+    this.dbService.importArchive(DbService.DUMPS_DIR, 'dump.zip');
+  }
+
   doOpenPdf() {
     let path = this.filePlugin.externalApplicationStorageDirectory;
 
@@ -78,11 +82,11 @@ export class DatabasePage {
 
     let path = this.filePlugin.externalApplicationStorageDirectory;
 
-    this.emailComposer.isAvailable().then((available: boolean) => {
+    /*this.emailComposer.isAvailable().then((available: boolean) => {
       if (available) {
         console.log('available')
       }
-    });
+    });*/
 
     let email = {
       to: 'akim.merabet@cmigroupe.com',
