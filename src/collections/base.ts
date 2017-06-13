@@ -82,8 +82,9 @@ export class BaseCollection {
         return file_path
 
       })
-      .catch(err => { console.log(err.message); return 'Error!' });
+      .catch(err => { return err.message; });
   }
+
 
   changes() {
     return new Observable<void>((subscriber: Subscriber<void>) => {

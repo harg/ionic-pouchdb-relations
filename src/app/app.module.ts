@@ -42,7 +42,7 @@ import { DbService } from '../services/databases';
     SplashScreen,
     DbService,
     { provide: ErrorHandler, useClass: IonicErrorHandler },
-    File
+    File,
   ]
 })
 export class AppModule {}
