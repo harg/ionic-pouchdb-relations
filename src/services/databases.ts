@@ -157,10 +157,15 @@ export class DbService {
           let stream = new MemoryStream(content);
           if(content.indexOf('items') > -1){
             console.log('load items')
+            this._databases.itemDB.destroy();
             this._databases.itemDB.load(stream).then(res => console.log(res));
           }
           if(content.indexOf('categories') > -1){
-            this._databases.CategoryDB.load(stream).then(res => console.log(res));
+            this._databases.CategoryDB.destroy()
+            .then(_ => {
+              return this._databases.CategoryDB.load(stream)
+            })
+            .then(res => console.log("result = " + res));
           }
         }
       })
