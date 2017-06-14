@@ -1,6 +1,7 @@
 import { Category } from './category';
+import { BaseModel } from './base';
 
-export class Item {
+export class Item extends BaseModel {
 
   _id?: string
   _rev?: string
@@ -10,8 +11,11 @@ export class Item {
   category_id: string
   category: Category = new Category
 
-  constructor(){
+  constructor() {
+    super()
   }
+
+  static get tableName() { return 'items' }
 
   static fromDoc(doc:any): Item {
     const item = new Item()

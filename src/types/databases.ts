@@ -1,9 +1,9 @@
 import * as PouchDB from 'pouchdb';
 
-import { Category } from '../models/category';
-import { Item } from '../models/item';
+import { BaseCollection } from '../collections/base';
 
-export type Databases = {
-  itemDB :   PouchDB.Database<Item>
-  CategoryDB :  PouchDB.Database<Category>
+export interface Databases {
+  newDatabase<T>(name: string): PouchDB.Database<T>
+  getDatabase<T>(name: string): PouchDB.Database<T>
+  getCollection<T>(name: string): BaseCollection<T>
 }

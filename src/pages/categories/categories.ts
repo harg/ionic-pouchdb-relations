@@ -15,15 +15,15 @@ export class CategoriesPage {
   categories: Category[] = [];
 
   constructor(private alertCtrl: AlertController, private dbService: DbService) {
-    this.dbService.categoriesCollection().changes().subscribe(() => { this.refresh(); });
-    this.dbService.itemsCollection().changes().subscribe(() => { this.refresh(); });
+    this.dbService.categoriesCollection.changes().subscribe(() => { this.refresh(); });
+    this.dbService.itemsCollection.changes().subscribe(() => { this.refresh(); });
     this.refresh();
   }
 
   private async refresh() {
-    let docs =  await this.dbService.categoriesCollection().findAll();
+    let docs =  await this.dbService.categoriesCollection.findAll();
     docs.forEach((category, i) => {
-      this.dbService.itemsCollection().findByCategoryId(category._id).then(its => category.items = its)
+      this.dbService.itemsCollection.findByCategoryId(category._id).then(its => category.items = its)
     })
     this.categories = docs;
   }
@@ -47,7 +47,9 @@ export class CategoriesPage {
         },
         {
           text: 'Add',
-          handler: (category: Category) => { this.dbService.categoriesCollection().add(category); }
+          handler: (category: Category) => {
+            this.dbService.categoriesCollection.add(category);
+          }
         }
       ]
     }).present();
@@ -74,14 +76,18 @@ export class CategoriesPage {
         },
         {
           text: 'Save',
-          handler: (newCategory: Category) => { newCategory._id = category._id; newCategory._rev = category._rev; this.dbService.categoriesCollection().update(newCategory); }
+          handler: (newCategory: Category) => {
+            newCategory._id = category._id;
+            newCategory._rev = category._rev;
+            this.dbService.categoriesCollection.update(newCategory);
+          }
         }
       ]
     }).present();
   }
 
   deleteCategory(category: Category) {
-    this.dbService.categoriesCollection().remove(category);
+    this.dbService.categoriesCollection.remove(category);
   }
 
 }

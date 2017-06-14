@@ -1,13 +1,7 @@
-// export interface Category {
-//   _id?: string,
-//   _rev?: string,
-//   title: string,
-//   description: string
-// }
-
 import { Item } from './item';
+import { BaseModel } from './base';
 
-export class Category {
+export class Category extends BaseModel {
 
   _id?: string
   _rev?: string
@@ -16,7 +10,8 @@ export class Category {
 
   items: Item[]
 
-  constructor(){
+  constructor() {
+    super();
   }
 
   static fromDoc(doc:any): Category {

@@ -2,6 +2,7 @@ import { NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import { File } from '@ionic-native/file';
+import { BaseModel } from '../models/base';
 
 import { Databases } from '../types/databases'
 
@@ -12,19 +13,21 @@ var MemoryStream = require('memorystream');
 PouchDB.plugin(replicationStream.plugin);
 PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
 
-export class BaseCollection {
+export abstract class BaseCollection<T extends BaseModel> {
 
   protected dbs: Databases;
   protected zone: NgZone;
-  protected db_name: string;
+  //protected db_name: string;
 
   private static _filePlugin: File = null;
 
-  constructor(dbs: Databases, db_name: string, zone: NgZone) {
+  constructor(dbs: Databases, /*db_name: string,*/ zone: NgZone) {
     this.dbs = dbs;
     this.zone = zone;
-    this.db_name = db_name;
+    //this.db_name = db_name;
   }
+
+  abstract get name();
 
   static get filePlugin() : File {
     if(this._filePlugin == null) {
@@ -33,17 +36,18 @@ export class BaseCollection {
     return this._filePlugin;
   }
 
-  protected getDB() {
-    return this.dbs[this.db_name];
+  protected get db() {
+    return this.dbs.getDatabase<T>(this.name); // [this.db_name];
   }
 
-  findAll() {
-    return this.getDB().allDocs({ include_docs: true })
+  findAll(): Promise<T[]> {
+    return this.db.allDocs({ include_docs: true })
       .then(docs => docs.rows.map(row => row.doc));
   }
 
-  find(id: string) {
-    return this.getDB().get(id).then(doc => doc);
+  findByID(id: string) {
+    return this.db.get(id)
+      .then(doc => doc);
   }
 
   async dump() {
@@ -53,7 +57,7 @@ export class BaseCollection {
       dumpedString += chunk.toString();
     });
 
-    await this.dbs[this.db_name].dump(stream);
+    await this.db.dump(stream);
     return dumpedString;
   }
 
@@ -88,7 +92,7 @@ export class BaseCollection {
 
   changes() {
     return new Observable<void>((subscriber: Subscriber<void>) => {
-      this.getDB().changes({ live: true, since: 'now' })
+      this.db.changes({ live: true, since: 'now' })
       .on('change', (change) => { this.zone.run(() => { subscriber.next(); }); });
     });
   }

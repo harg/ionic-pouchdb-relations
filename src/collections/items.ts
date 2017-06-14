@@ -4,22 +4,18 @@ import { BaseCollection } from './base';
 import { Databases } from '../types/databases'
 
 import { Item } from '../models/item';
+import { Category } from '../models/category';
 
-//export type ItemChange = PouchDB.Core.ChangesResponseChange<Item>;
-
-export class ItemsCollection extends BaseCollection {
-
+export class ItemsCollection extends BaseCollection<Item> {
 
   constructor(dbs: Databases, zone: NgZone) {
-    super(dbs, 'itemDB', zone);
+    super(dbs, zone);
   }
 
-  // findAllPopulated() {
-  //   return this.db.allDocs({ include_docs: true }).then(docs => docs.rows.map(row => Item.fromDoc(row.doc)/*.populate('category', this)*/));
-  // }
+  get name() { return 'items' }
 
   findByCategoryId(category_id: string) {
-    return this.dbs.itemDB.find({
+    return this.dbs.getDatabase<Item>('items').find({
       selector: {
         category_id: category_id
       }
@@ -27,32 +23,23 @@ export class ItemsCollection extends BaseCollection {
   }
 
   add(item: Item) {
-    this.dbs.itemDB.post(item);
+    this.db.post(item);
   }
 
   remove(item: Item) {
-    this.dbs.itemDB.remove(item._id, item._rev);
+    this.db.remove(item._id, item._rev);
   }
 
   update(item: Item) {
-    this.dbs.itemDB.put(item);
+    this.db.put(item);
   }
 
   populateRelationships(items: Item[]){
-    // return pItems
-
-    // .then((items) => {
       items.forEach((item, i) => {
-         this.dbs.CategoryDB.get(item.category_id).then(category => item.category = category)
+         this.dbs.getDatabase<Category>('categories').get(item.category_id)
+         .then(category => item.category = category)
      })
      return items
-    // })
-
-    // other populate
-    // .then(items => {
-    //   // mutate items
-    //   return items
-    // })
   }
 
 

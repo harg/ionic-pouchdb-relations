@@ -5,6 +5,7 @@ import { Databases } from '../types/databases'
 
 import { Item } from '../models/item'
 import { Category } from '../models/category'
+import { BaseModel } from '../models/base'
 
 import { CategoriesCollection } from '../collections/categories'
 import { ItemsCollection } from '../collections/items'
@@ -12,42 +13,72 @@ import { ItemsCollection } from '../collections/items'
 import * as PouchDB from 'pouchdb'
 import * as PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
+import * as PouchDBLoad from 'pouchdb-load';
+PouchDB.plugin({
+  loadIt: PouchDBLoad.load
+});
 
 import * as JSZip from 'jszip';
 var MemoryStream = require('memorystream');
 
 import { FileUtils } from '../helpers/file-utils';
+import { BaseCollection } from '../collections/base';
 
 @Injectable()
-export class DbService {
-
-  private _databases: Databases = {
-    itemDB: new PouchDB<Item>('items'),
-    CategoryDB: new PouchDB<Category>('categories'),
-  }
+export class DbService implements Databases {
 
   public static DUMPS_DIR = 'dumps/';
 
-  private _categories: CategoriesCollection
-  private _items: ItemsCollection
+  private _databases = {
+    categories: new PouchDB<Category>('categories'),
+    items: new PouchDB<Category>('items')
+  };
+
+  private _collections: BaseCollection<any>[] = [];
 
   constructor(private zone: NgZone, private filePlugin: File) {
-    this._categories = new CategoriesCollection(this._databases, this.zone)
-    this._items = new ItemsCollection(this._databases, this.zone);
+    this._collections['categories'] = new CategoriesCollection(this, this.zone);
+    this._collections['items'] = new ItemsCollection(this, this.zone);
   }
 
-  categoriesCollection() {
-    return this._categories
+  public newDatabase<T>(name: string): PouchDB.Database<T> {
+    if(this._databases[name] != undefined)
+      return new PouchDB<T>(name);
+    else
+      throw new Error('error')
   }
 
-  itemsCollection() {
-    return this._items
+
+  public getDatabase<T extends BaseModel>(name: string): PouchDB.Database<T> {
+    if(this._databases[name] != undefined)
+      return <PouchDB.Database<T>>this._databases[name];
+    else
+      throw new Error('error')
+  }
+
+  public getCollection<T extends BaseModel>(name: string): BaseCollection<T> {
+    if(this._collections[name] != undefined)
+      return <BaseCollection<T>>this._collections[name];
+    else
+      throw new Error('error')
+  }
+
+  get allCollections(): BaseCollection<any>[] {
+    return this._collections
+  }
+
+  get categoriesCollection(): CategoriesCollection {
+    return <CategoriesCollection>this.getCollection<Category>('categories');
+  }
+
+  get itemsCollection(): ItemsCollection {
+    return <ItemsCollection>this.getCollection<Item>('items');
   }
 
   async dump() {
     return Promise.all([
-      this._categories.dumpToFile('categories'),
-      this._items.dumpToFile('items')
+      this.categoriesCollection.dumpToFile('categories'),
+      this.itemsCollection.dumpToFile('items')
     ]).then(paths => paths);
   }
 
@@ -55,7 +86,6 @@ export class DbService {
     let paths = await this.dump();
     //console.log(paths);
     var zip = new JSZip();
-    let data;
 
     // marche pas
     // paths.forEach(path => {
@@ -126,9 +156,9 @@ export class DbService {
       });
   }
 
-  importArchive(dir: string, zip_file: string) {
+  public loadArchive(dir: string, zip_file): Promise<JSZip>{
     let root = this.filePlugin.externalApplicationStorageDirectory;
-    this.filePlugin.resolveDirectoryUrl(root)
+    return this.filePlugin.resolveDirectoryUrl(root)
       .then(dirEntry => {
         console.log('getDirectory')
         return this.filePlugin.getDirectory(dirEntry, DbService.DUMPS_DIR, { create: false });
@@ -145,31 +175,97 @@ export class DbService {
         let archive = new JSZip();
         return archive.loadAsync(zip_content)
       })
+  }
+
+
+
+  getDatabaseName(dump_data: string): string {
+    const regex = /"db_name":"(\w+)"/;
+    let m = regex.exec(dump_data);
+    if (m !== null) {
+      return m[1];
+    }
+    return 'ERROR';
+  }
+
+  public destroyAndLoadDatabase(content): Promise<any> {
+    let db_name = this.getDatabaseName(content);
+    if(db_name != 'ERROR') {
+      let db = this.getDatabase<BaseModel>(db_name);
+      return db.destroy()
+      .then( _ => {
+        const new_db = this.newDatabase<BaseModel>(db_name);
+        return new_db.loadIt(content);
+      })
+    } else {
+      return Promise.reject('invalid database name');
+    }
+  }
+
+  importArchive(dir: string, zip_file: string) {
+      this.loadArchive(dir, zip_file)
       .then(zip => {
         return Promise.all([
           zip.file('items').async("string"),
           zip.file('categories').async("string")
-        ]).then(_ => _)
+        ])//.then(_ => _)
       })
       .then(contents => {
-        for (let content of contents){
-          console.log(content);
-          let stream = new MemoryStream(content);
-          if(content.indexOf('items') > -1){
-            console.log('load items')
-            this._databases.itemDB.destroy();
-            this._databases.itemDB.load(stream).then(res => console.log(res));
-          }
-          if(content.indexOf('categories') > -1){
-            this._databases.CategoryDB.destroy()
-            .then(_ => {
-              return this._databases.CategoryDB.load(stream)
-            })
-            .then(res => console.log("result = " + res));
-          }
-        }
+        return Promise.all(contents.map(content => this.destroyAndLoadDatabase(content)))
       })
-      .catch(err => { console.log(err.message); return 'Error!' });
+      .then(_ => document.location.reload())
+
+        // for (let content of contents) {
+        //   let db_name = this.getDatabaseName(content);
+        //   if(db_name != 'ERROR') {
+        //     let db = this.getDatabase<BaseModel>(db_name);
+        //     db.destroy()
+        //     .then( _ => {
+        //       const new_db = this.newDatabase<BaseModel>(db_name);
+        //       return new_db.loadIt(content);
+        //     })
+        //     .then(() => {
+        //       console.log(`${db_name} loaded`)
+        //       document.location.reload();
+        //     })
+        //   }
+
+        //   /*console.log(content);
+        //   let stream = new MemoryStream(content);
+        //   if(content.indexOf('items') > -1){
+        //     this._databases.itemDB.destroy()
+        //     .then(()=> {
+        //       const db = new PouchDB<Item>('items');
+        //       this._databases.itemDB = db;
+        //       return db.loadIt(content)
+        //     })
+        //     .then(() => {
+        //       console.log("items loaded")
+        //       return this._databases.itemDB.allDocs({ include_docs: true })
+        //     })
+        //     .then(docs => console.dir(docs.rows.map(row => Item.fromDoc(row.doc))))
+        //     .catch(err => { console.log(err.message); return 'Error!' });
+        //   }
+        //   if(content.indexOf('categories') > -1){
+        //     // this._databases.CategoryDB.destroy()
+        //     // .then(_ => {
+        //     //   const CategoryDB = new PouchDB<Category>('categories');
+        //     //   return CategoryDB.load(stream)
+        //     // })
+        //     this._databases.CategoryDB.destroy()
+        //     .then(()=> {
+        //       const db = new PouchDB<Category>('categories');
+        //       this._databases.CategoryDB = db;
+        //       return db.loadIt(content)
+        //     })
+        //     .then(() => {
+        //       console.log("categories loaded")
+        //       return this._databases.CategoryDB.allDocs({ include_docs: true })
+        //     })
+        //   }*/
+        // }
+      // })
+      .catch(err => { console.log(err.message); return 'ERROR' });
   }
 
 }
