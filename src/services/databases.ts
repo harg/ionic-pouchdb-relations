@@ -41,6 +41,10 @@ export class DbService implements Databases {
     this._collections['items'] = new ItemsCollection(this, this.zone);
   }
 
+  /**
+   * Création d'une nouvelle base de données
+   * @param name le nom de la base de données
+   */
   public newDatabase<T>(name: string): PouchDB.Database<T> {
     if(this._databases[name] != undefined)
       return new PouchDB<T>(name);
@@ -48,7 +52,10 @@ export class DbService implements Databases {
       throw new Error('error')
   }
 
-
+  /**
+   * Retourne l'instance de la base de données par son nom
+   * @param name le nom de la base de données
+   */
   public getDatabase<T extends BaseModel>(name: string): PouchDB.Database<T> {
     if(this._databases[name] != undefined)
       return <PouchDB.Database<T>>this._databases[name];
@@ -56,6 +63,10 @@ export class DbService implements Databases {
       throw new Error('error')
   }
 
+  /**
+   *
+   * @param name
+   */
   public getCollection<T extends BaseModel>(name: string): BaseCollection<T> {
     if(this._collections[name] != undefined)
       return <BaseCollection<T>>this._collections[name];

@@ -17,16 +17,17 @@ export abstract class BaseCollection<T extends BaseModel> {
 
   protected dbs: Databases;
   protected zone: NgZone;
-  //protected db_name: string;
 
   private static _filePlugin: File = null;
 
-  constructor(dbs: Databases, /*db_name: string,*/ zone: NgZone) {
+  constructor(dbs: Databases, zone: NgZone) {
     this.dbs = dbs;
     this.zone = zone;
-    //this.db_name = db_name;
   }
 
+  /**
+   * retourne le nom de la collection
+   */
   abstract get name();
 
   static get filePlugin() : File {
@@ -36,8 +37,11 @@ export abstract class BaseCollection<T extends BaseModel> {
     return this._filePlugin;
   }
 
+  /**
+   * retourne la database pour cette collection
+   */
   protected get db() {
-    return this.dbs.getDatabase<T>(this.name); // [this.db_name];
+    return this.dbs.getDatabase<T>(this.name);
   }
 
   findAll(): Promise<T[]> {
