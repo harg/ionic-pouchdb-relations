@@ -29,9 +29,11 @@ export class DbService implements Databases {
 
   public static DUMPS_DIR = 'dumps/';
 
+  private _db_names = ['items', 'categories'];
+
   private _databases = {
     categories: new PouchDB<Category>('categories'),
-    items: new PouchDB<Category>('items')
+    items: new PouchDB<Item>('items')
   };
 
   private _collections: BaseCollection<any>[] = [];
@@ -171,15 +173,12 @@ export class DbService implements Databases {
     let root = this.filePlugin.externalApplicationStorageDirectory;
     return this.filePlugin.resolveDirectoryUrl(root)
       .then(dirEntry => {
-        console.log('getDirectory')
         return this.filePlugin.getDirectory(dirEntry, DbService.DUMPS_DIR, { create: false });
       })
       .then(dirEntry => {
-        console.log('getFile')
         return this.filePlugin.getFile(dirEntry, zip_file, { create: false });
       })
       .then(fileEntry => {
-        console.log('readAsBinary')
         return this.filePlugin.readAsBinaryString(root + dir, zip_file);
       })
       .then(zip_content => {
@@ -199,14 +198,14 @@ export class DbService implements Databases {
     return 'ERROR';
   }
 
-  public destroyAndLoadDatabase(content): Promise<any> {
-    let db_name = this.getDatabaseName(content);
+  public destroyAndLoadDatabase(obj_content): Promise<any> {
+    let db_name = obj_content.db_name; //this.getDatabaseName(obj_content.);
     if(db_name != 'ERROR') {
       let db = this.getDatabase<BaseModel>(db_name);
       return db.destroy()
       .then( _ => {
         const new_db = this.newDatabase<BaseModel>(db_name);
-        return new_db.loadIt(content);
+        return new_db.loadIt(obj_content.content);
       })
     } else {
       return Promise.reject('invalid database name');
@@ -216,65 +215,16 @@ export class DbService implements Databases {
   importArchive(dir: string, zip_file: string) {
       return this.loadArchive(dir, zip_file)
       .then(zip => {
-        return Promise.all([
-          zip.file('items').async("string"),
-          zip.file('categories').async("string")
-        ])//.then(_ => _)
+        return Promise.all(this._db_names.map(
+          db_name => zip.file(db_name).async("string")
+          .then(content => {
+            return { db_name: db_name, content: content}
+          })
+        )
+      )})
+      .then(obj_contents => {
+        return Promise.all(obj_contents.map(obj_content => this.destroyAndLoadDatabase(obj_content)))
       })
-      .then(contents => {
-        return Promise.all(contents.map(content => this.destroyAndLoadDatabase(content)))
-      })
-
-        // for (let content of contents) {
-        //   let db_name = this.getDatabaseName(content);
-        //   if(db_name != 'ERROR') {
-        //     let db = this.getDatabase<BaseModel>(db_name);
-        //     db.destroy()
-        //     .then( _ => {
-        //       const new_db = this.newDatabase<BaseModel>(db_name);
-        //       return new_db.loadIt(content);
-        //     })
-        //     .then(() => {
-        //       console.log(`${db_name} loaded`)
-        //       document.location.reload();
-        //     })
-        //   }
-
-        //   /*console.log(content);
-        //   let stream = new MemoryStream(content);
-        //   if(content.indexOf('items') > -1){
-        //     this._databases.itemDB.destroy()
-        //     .then(()=> {
-        //       const db = new PouchDB<Item>('items');
-        //       this._databases.itemDB = db;
-        //       return db.loadIt(content)
-        //     })
-        //     .then(() => {
-        //       console.log("items loaded")
-        //       return this._databases.itemDB.allDocs({ include_docs: true })
-        //     })
-        //     .then(docs => console.dir(docs.rows.map(row => Item.fromDoc(row.doc))))
-        //     .catch(err => { console.log(err.message); return 'Error!' });
-        //   }
-        //   if(content.indexOf('categories') > -1){
-        //     // this._databases.CategoryDB.destroy()
-        //     // .then(_ => {
-        //     //   const CategoryDB = new PouchDB<Category>('categories');
-        //     //   return CategoryDB.load(stream)
-        //     // })
-        //     this._databases.CategoryDB.destroy()
-        //     .then(()=> {
-        //       const db = new PouchDB<Category>('categories');
-        //       this._databases.CategoryDB = db;
-        //       return db.loadIt(content)
-        //     })
-        //     .then(() => {
-        //       console.log("categories loaded")
-        //       return this._databases.CategoryDB.allDocs({ include_docs: true })
-        //     })
-        //   }*/
-        // }
-      // })
       .catch(err => { console.log(err.message); return 'ERROR' });
   }
 

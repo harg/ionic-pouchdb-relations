@@ -18,6 +18,7 @@ export abstract class BaseCollection<T extends BaseModel> {
   protected dbs: Databases;
   protected zone: NgZone;
 
+  // TODO utiliser helper FileUtils
   private static _filePlugin: File = null;
 
   constructor(dbs: Databases, zone: NgZone) {
@@ -44,27 +45,42 @@ export abstract class BaseCollection<T extends BaseModel> {
     return this.dbs.getDatabase<T>(this.name);
   }
 
+  /**
+   * renvois tous les éléments de la collection
+   */
   findAll(): Promise<T[]> {
     return this.db.allDocs({ include_docs: true })
       .then(docs => docs.rows.map(row => row.doc));
   }
 
-  findByID(id: string) {
+  /**
+   * renvois l'élément de la collection par son identifiant
+   * null si non trouvé
+   * @param id identifiant
+   */
+  findByID(id: string): Promise<T> {
     return this.db.get(id)
       .then(doc => doc);
   }
 
-  async dump() {
+  /**
+   * renvois le dump du contenu de la base en string
+   */
+  async dump(): Promise<string> {
     var dumpedString = '';
     var stream = new MemoryStream();
     stream.on('data', function(chunk) {
       dumpedString += chunk.toString();
     });
-
     await this.db.dump(stream);
     return dumpedString;
   }
 
+  /**
+   * Crée un fichier avec le dump de la base sous forme d'une string
+   * renvois le chemin natif du fichier
+   * @param filename le nom du fichier
+   */
   async dumpToFile(filename: string): Promise<string>  {
     let data = await this.dump();
     const DUMPS_DIR = 'dumps/';
@@ -93,7 +109,9 @@ export abstract class BaseCollection<T extends BaseModel> {
       .catch(err => { return err.message; });
   }
 
-
+  /**
+   * notifie les modifications de la collection aux observers
+   */
   changes() {
     return new Observable<void>((subscriber: Subscriber<void>) => {
       this.db.changes({ live: true, since: 'now' })
