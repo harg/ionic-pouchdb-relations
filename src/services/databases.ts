@@ -214,7 +214,7 @@ export class DbService implements Databases {
   }
 
   importArchive(dir: string, zip_file: string) {
-      this.loadArchive(dir, zip_file)
+      return this.loadArchive(dir, zip_file)
       .then(zip => {
         return Promise.all([
           zip.file('items').async("string"),
@@ -224,7 +224,6 @@ export class DbService implements Databases {
       .then(contents => {
         return Promise.all(contents.map(content => this.destroyAndLoadDatabase(content)))
       })
-      .then(_ => document.location.reload())
 
         // for (let content of contents) {
         //   let db_name = this.getDatabaseName(content);

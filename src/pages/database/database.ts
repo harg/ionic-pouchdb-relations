@@ -7,7 +7,7 @@ import { File } from '@ionic-native/file';
 import { DocumentViewer, DocumentViewerOptions } from '@ionic-native/document-viewer';
 import { EmailComposer } from '@ionic-native/email-composer';
 import { FileUtils } from '../../helpers/file-utils';
-
+import { LoadingController } from 'ionic-angular';
 
 /**
  * Generated class for the DatabasePage page.
@@ -27,7 +27,8 @@ export class DatabasePage {
     private dbService: DbService,
     private document: DocumentViewer,
     private filePlugin: File,
-    private emailComposer: EmailComposer) {
+    private emailComposer: EmailComposer,
+    private loadingCtrl: LoadingController) {
   }
 
   ionViewDidLoad() {
@@ -35,13 +36,21 @@ export class DatabasePage {
   }
 
   doExportDatabases() {
-    //this.dbService.categoriesCollection().dump().then(s => console.log(s));
-    //this.dbService.dump().then(s => console.log(s));
     this.dbService.dumpAllToFiles();
   }
 
   doImportDatabases() {
-    this.dbService.importArchive(DbService.DUMPS_DIR, 'dump.zip');
+    let loader = this.loadingCtrl.create({
+      content: "Restauration de la base de données et redémarrage de l'application, merci de patienter..."
+    });
+    loader.present({
+      disableApp: true
+    });
+    this.dbService.importArchive(DbService.DUMPS_DIR, 'dump.zip')
+      .then(_ => {
+        document.location.reload(true)
+        loader.dismiss();
+      })
   }
 
   doOpenPdf() {
