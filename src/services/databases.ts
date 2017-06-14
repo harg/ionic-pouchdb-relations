@@ -187,19 +187,8 @@ export class DbService implements Databases {
       })
   }
 
-
-
-  getDatabaseName(dump_data: string): string {
-    const regex = /"db_name":"(\w+)"/;
-    let m = regex.exec(dump_data);
-    if (m !== null) {
-      return m[1];
-    }
-    return 'ERROR';
-  }
-
   public destroyAndLoadDatabase(obj_content): Promise<any> {
-    let db_name = obj_content.db_name; //this.getDatabaseName(obj_content.);
+    let db_name = obj_content.db_name;
     if(db_name != 'ERROR') {
       let db = this.getDatabase<BaseModel>(db_name);
       return db.destroy()
