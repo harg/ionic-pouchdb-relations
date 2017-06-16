@@ -1,8 +1,9 @@
 import * as PouchDB from 'pouchdb';
 
 import { BaseCollection } from '../collections/base';
+import { BaseModel } from '../models/base';
 
-export interface Databases {
+export interface IDatabases {
   /**
    * Permet de créer une nouvelle instance de base de données
    */
@@ -16,5 +17,6 @@ export interface Databases {
   /**
    * renvois une collection par son nom
    */
-  getCollection<T>(name: string): BaseCollection<T>
+  getCollection<T extends BaseModel>(name: string): BaseCollection<T>
+
 }

@@ -30,18 +30,8 @@ export class ItemsPage implements OnInit{
   }
 
    private async refresh() {
-    // this.items =  await this.itemsService.populateRelationships( this.itemsService.findAll() )
     this.items = await this.dbService.itemsCollection.findAll()
     this.items = await this.dbService.itemsCollection.populateRelationships(this.items)
-
-    //this.items =  await this.dbService.items().findAll()
-
-    //let docs =  await this.itemsService.findAll()
-    // docs.forEach((item, i) => {
-    //   item.category = this.categoriesService.find(item.category_id)
-    // })
-    //this.items = docs
-
   }
 
 

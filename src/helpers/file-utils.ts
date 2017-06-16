@@ -65,4 +65,39 @@ export class FileUtils {
     return this.errors.indexOf(message) > -1;
   }
 
+  static saveFile(dir: string, filename: string, data: any): Promise<string> {
+    let dump_path: string;
+    let file_path: string;
+    return this.filePlugin.resolveDirectoryUrl(this._root)
+      .then(dirEntry => {
+        return this.filePlugin.getDirectory(dirEntry, dir, { create: true });
+      })
+      .then(dirEntry => {
+        dump_path = dirEntry.nativeURL;
+        return this.filePlugin.createFile(dirEntry.nativeURL, filename, true);
+      })
+      .then(fileEntry => {
+        file_path = fileEntry.nativeURL;
+        return this.filePlugin.writeExistingFile(dump_path, filename, data)
+      })
+      .then(() => {
+        console.log(`File wrote : ${file_path}`)
+        return file_path
+      })
+      .catch(err => { console.log(err.message); return 'Error!' });
+  }
+
+  static loadFileAsBinaryString(dir: string, filename: string) {
+    return this.filePlugin.resolveDirectoryUrl(this._root)
+      .then(dirEntry => {
+        return this.filePlugin.getDirectory(dirEntry, dir, { create: false });
+      })
+      .then(dirEntry => {
+        return this.filePlugin.getFile(dirEntry, filename, { create: false });
+      })
+      .then(fileEntry => {
+        return this.filePlugin.readAsBinaryString(this._root + dir, filename);
+      })
+  }
+
 }

@@ -9,13 +9,13 @@
 
 <ion-content padding>
 
-<ion-list>
-  <ion-item-sliding *ngFor="let item of items">
+<ion-list [virtualScroll]="items">
+  <ion-item-sliding *virtualItem="let item">
     <ion-item>
       <h2>{{item.title}}</h2>
       <p>{{item.description}}</p>
-      <p>{{item.category_id}}</p>
-      <p>[ {{ item.category.title }} ]</p>
+      <!--<p>{{item.category_id}}</p>
+      <p>[ {{ item.category.title }} ]</p>-->
     </ion-item>
     <ion-item-options>
       <button ion-button (click)="editItem(item)">Edit</button>

@@ -1,14 +1,15 @@
 import { Injectable, NgZone } from '@angular/core'
-import { File } from '@ionic-native/file';
 
-import { Databases } from '../types/databases'
+import { IDatabases } from '../types/databases'
 
+import { BaseModel } from '../models/base'
 import { Item } from '../models/item'
 import { Category } from '../models/category'
-import { BaseModel } from '../models/base'
+import { CategoryItem } from '../models/category-item';
 
 import { CategoriesCollection } from '../collections/categories'
 import { ItemsCollection } from '../collections/items'
+import { CategoriesItemsCollection } from '../collections/categories-items'
 
 import * as PouchDB from 'pouchdb'
 import * as PouchDBFind from 'pouchdb-find'
@@ -19,28 +20,66 @@ PouchDB.plugin({
 });
 
 import * as JSZip from 'jszip';
-var MemoryStream = require('memorystream');
 
 import { FileUtils } from '../helpers/file-utils';
 import { BaseCollection } from '../collections/base';
 
 @Injectable()
-export class DbService implements Databases {
+export class DbService implements IDatabases {
 
   public static DUMPS_DIR = 'dumps/';
 
-  private _db_names = ['items', 'categories'];
+  private _db_names = ['items', 'categories', 'categories_items'];
 
-  private _databases = {
-    categories: new PouchDB<Category>('categories'),
-    items: new PouchDB<Item>('items')
-  };
+  private _databases: PouchDB.Database<BaseModel>[] = [];
 
   private _collections: BaseCollection<any>[] = [];
 
-  constructor(private zone: NgZone, private filePlugin: File) {
+  constructor(private zone: NgZone) {
+
+    this._initDatabases();
+
     this._collections['categories'] = new CategoriesCollection(this, this.zone);
     this._collections['items'] = new ItemsCollection(this, this.zone);
+    this._collections['categories_items'] = new CategoriesItemsCollection(this, this.zone);
+
+    //this._initData()
+  }
+
+  private async _initData() {
+    console.log('init data')
+    let items = []; //this.itemsCollection;
+    let categories = []; //this.categoriesCollection;
+    console.log('begin init data')
+    //items.disableEvents();
+    //categories.disableEvents();
+    try {
+      for(let i = 1; i < 2000; i++){
+        console.log('idx = ' + i);
+        let item = new Item();
+        item.title = 'Item #' + i;
+        items.push(item);
+        let cat = new Category();
+        cat.title = 'Category #' + i;
+        categories.push(cat);
+      }
+      console.log('end init data')
+    }
+    finally
+    {
+      //items.restoreEvents();
+      //categories.restoreEvents();
+      this.itemsCollection.addBulk(items);
+      this.categoriesCollection.addBulk(categories);
+    }
+
+  }
+
+  private _initDatabases() {
+    this._db_names.forEach(db_name => {
+      console.log('init database ' + db_name);
+      this._databases[db_name] = this.newDatabase<BaseModel>(db_name);
+    });
   }
 
   /**
@@ -48,7 +87,7 @@ export class DbService implements Databases {
    * @param name le nom de la base de données
    */
   public newDatabase<T>(name: string): PouchDB.Database<T> {
-    if(this._databases[name] != undefined)
+    if(this._db_names.indexOf(name) > -1)
       return new PouchDB<T>(name);
     else
       throw new Error('error')
@@ -59,7 +98,7 @@ export class DbService implements Databases {
    * @param name le nom de la base de données
    */
   public getDatabase<T extends BaseModel>(name: string): PouchDB.Database<T> {
-    if(this._databases[name] != undefined)
+    if(this._db_names.indexOf(name) > -1)
       return <PouchDB.Database<T>>this._databases[name];
     else
       throw new Error('error')
@@ -88,10 +127,15 @@ export class DbService implements Databases {
     return <ItemsCollection>this.getCollection<Item>('items');
   }
 
+  get categoriesItemsCollection(): CategoriesItemsCollection {
+    return <CategoriesItemsCollection>this.getCollection<CategoryItem>('categories_items');
+  }
+
   async dump() {
     return Promise.all([
       this.categoriesCollection.dumpToFile('categories'),
-      this.itemsCollection.dumpToFile('items')
+      this.itemsCollection.dumpToFile('items'),
+      this.categoriesItemsCollection.dumpToFile('categories_items')
     ]).then(paths => paths);
   }
 
@@ -130,7 +174,7 @@ export class DbService implements Databases {
     // marche
     for (let path of paths) {
       let content = await FileUtils.getFileContent(path);
-      console.log(content);
+      //console.log(content);
       var filename = path.replace(/.*\//g, "");
       zip.file(filename, content, { binary: true });
     }
@@ -142,49 +186,17 @@ export class DbService implements Databases {
       }
       console.log(msg);
     })
-      .then(blob => {
-        let root = this.filePlugin.externalApplicationStorageDirectory;
-        let filename = 'dump.zip';
-        let dump_path: string;
-        let file_path: string;
-
-        this.filePlugin.resolveDirectoryUrl(root)
-          .then(dirEntry => {
-            return this.filePlugin.getDirectory(dirEntry, DbService.DUMPS_DIR, { create: true });
-          })
-          .then(dirEntry => {
-            dump_path = dirEntry.nativeURL;
-            return this.filePlugin.createFile(dirEntry.nativeURL, filename, true);
-          })
-          .then(fileEntry => {
-            file_path = fileEntry.nativeURL;
-            return this.filePlugin.writeExistingFile(dump_path, filename, blob)
-          })
-          .then(() => {
-            console.log(`File wrote : ${file_path}`)
-            return file_path
-
-          })
-          .catch(err => { console.log(err.message); return 'Error!' });
-      });
+    .then(blob => {
+      return FileUtils.saveFile(DbService.DUMPS_DIR, 'dump.zip', blob);
+    });
   }
 
   public loadArchive(dir: string, zip_file): Promise<JSZip>{
-    let root = this.filePlugin.externalApplicationStorageDirectory;
-    return this.filePlugin.resolveDirectoryUrl(root)
-      .then(dirEntry => {
-        return this.filePlugin.getDirectory(dirEntry, DbService.DUMPS_DIR, { create: false });
-      })
-      .then(dirEntry => {
-        return this.filePlugin.getFile(dirEntry, zip_file, { create: false });
-      })
-      .then(fileEntry => {
-        return this.filePlugin.readAsBinaryString(root + dir, zip_file);
-      })
+    return FileUtils.loadFileAsBinaryString(dir, zip_file)
       .then(zip_content => {
         let archive = new JSZip();
         return archive.loadAsync(zip_content)
-      })
+      });
   }
 
   public destroyAndLoadDatabase(obj_content): Promise<any> {
@@ -193,8 +205,16 @@ export class DbService implements Databases {
       let db = this.getDatabase<BaseModel>(db_name);
       return db.destroy()
       .then( _ => {
+        console.log("création de la db " + db_name);
         const new_db = this.newDatabase<BaseModel>(db_name);
-        return new_db.loadIt(obj_content.content);
+        //return new_db.loadIt(obj_content.content);
+        return new_db.bulkDocs(
+          JSON.parse(obj_content.content).map(doc => {
+            let o = JSON.parse(doc);
+            delete o._rev;
+            return o;
+          })
+        );
       })
     } else {
       return Promise.reject('invalid database name');
@@ -202,19 +222,20 @@ export class DbService implements Databases {
   }
 
   importArchive(dir: string, zip_file: string) {
-      return this.loadArchive(dir, zip_file)
-      .then(zip => {
-        return Promise.all(this._db_names.map(
-          db_name => zip.file(db_name).async("string")
-          .then(content => {
-            return { db_name: db_name, content: content}
-          })
-        )
-      )})
-      .then(obj_contents => {
-        return Promise.all(obj_contents.map(obj_content => this.destroyAndLoadDatabase(obj_content)))
-      })
-      .catch(err => { console.log(err.message); return 'ERROR' });
+    return this.loadArchive(dir, zip_file)
+    .then(zip => {
+      return Promise.all(this._db_names.map(
+        db_name => zip.file(db_name).async("string")
+        .then(content => {
+          return { db_name: db_name, content: content}
+        })
+      )
+    )})
+    .then(obj_contents => {
+      return Promise.all(obj_contents.map(obj_content =>
+        this.destroyAndLoadDatabase(obj_content)))
+    })
+    .catch(err => { console.log(err.message); return 'ERROR' });
   }
 
 }
