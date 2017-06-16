@@ -11,16 +11,10 @@ export class CategoryItem extends BaseModel {
     super();
   }
 
+  get doc_properties(): string[] { return ['_id', '_rev', 'item_id', 'category_id']; }
+
   toJson(): string {
-    let filter = new Array();
-    filter[0] = '_id';
-    filter[1] = '_rev';
-    filter[2] = 'item_id';
-    filter[3] = 'category_id';
-    return JSON.stringify(this, filter);
+    return JSON.stringify(this, this.doc_properties);
   }
 
-  toDoc() {
-    return [];
-  }
 }

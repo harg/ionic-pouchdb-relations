@@ -9,16 +9,12 @@ export abstract class BaseModel {
 
   public created_at: string;
 
-
-
   constructor() {
     this._id = new Date().getTime() + '_' + Math.floor(Math.random() * 10000);
     this.created_at = (new Date()).toJSON();
   }
 
   get doc_properties(): Array<string> { return []; }
-
-  public abstract toJson(): string;
 
   toDoc(): object {
     let clone = Object.assign({}, this)
@@ -27,4 +23,6 @@ export abstract class BaseModel {
     }
     return clone
   }
+
+  abstract toJson(): string;
 }

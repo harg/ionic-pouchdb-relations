@@ -18,49 +18,50 @@ export class ItemsPage implements OnInit{
 
   items: Item[] = [];
   data: Observable<Array<Item>>;
+  private page: number = 0;
 
   constructor(private zone: NgZone,public navCtrl: NavController, private alertCtrl: AlertController,
               private dbService: DbService) {
-    this.dbService.itemsCollection.changes().subscribe(() => { this.refresh(); });
-    this.dbService.categoriesCollection.changes().subscribe(() => { this.refresh(); });
+    this.dbService.itemsCollection.changes().subscribe(() => { this.loadItems(); });
+    this.dbService.categoriesCollection.changes().subscribe(() => { this.loadItems(); });
+    this.loadItems();
   }
 
   ngOnInit() {
-    this.refresh();
+    //this.refresh();
   }
 
-   private async refresh() {
-    this.items = await this.dbService.itemsCollection.findAll()
-    this.items = await this.dbService.itemsCollection.populateRelationships(this.items)
+  // private async refresh() {
+  //   this.items = await this.dbService.itemsCollection.findAll()
+  //   this.items = await this.dbService.itemsCollection.populateRelationships(this.items)
+  // }
+
+  loadItems() {
+    return new Promise(resolve => {
+      this.dbService.itemsCollection.findAll(this.page)
+      .then(data => {
+        return this.dbService.itemsCollection.populateRelationships(data)
+      })
+      .then( items => {
+        for(let item of items) {
+          this.items.push(item);
+        }
+        resolve(true)
+      });
+    });
   }
 
+  doInfinite(infiniteScroll) {
+    console.log('doInfinite, page = '+this.page);
+    this.page += 1;
+
+    this.loadItems().then(()=>{
+      infiniteScroll.complete();
+    });
+  }
 
   newItem() {
-
     this.navCtrl.push(ItemNewPage, {});
-
-    // this.alertCtrl.create({
-    //   title: 'New item',
-    //   inputs: [
-    //     {
-    //       name: 'title',
-    //       placeholder: 'Title'
-    //     },
-    //     {
-    //       name: 'description',
-    //       placeholder: 'Description'
-    //     }],
-    //   buttons: [
-    //     {
-    //       text: 'Cancel',
-    //       role: 'cancel'
-    //     },
-    //     {
-    //       text: 'Add',
-    //       handler: (item: Item) => { this.itemsService.add(item); }
-    //     }
-    //   ]
-    // }).present();
   }
 
   editItem(item: Item) {

@@ -19,6 +19,7 @@ export abstract class BaseCollection<T extends BaseModel> {
   protected dbService: DbService;
   protected zone: NgZone;
   private _no_events = false;
+  private perpage: number = 50;
 
   // TODO utiliser helper FileUtils
   private static _filePlugin: File = null;
@@ -67,7 +68,7 @@ export abstract class BaseCollection<T extends BaseModel> {
   }
 
   restoreEvents() {
-    this._no_events = true;
+    this._no_events = false;
   }
 
   /**
@@ -80,9 +81,13 @@ export abstract class BaseCollection<T extends BaseModel> {
   /**
    * renvois tous les éléments de la collection
    */
-  findAll(): Promise<T[]> {
-    return this.db.allDocs({ include_docs: true })
-      .then(docs => docs.rows.map(row => row.doc));
+  findAll(page: number = 1): Promise<T[]> {
+    return this.db.allDocs({
+      include_docs: true,
+      limit: this.perpage,
+      skip: page * this.perpage
+    })
+    .then(docs => docs.rows.map(row => row.doc));
   }
 
   /**

@@ -12,13 +12,9 @@ export class Category extends BaseModel {
     super();
   }
 
-  toJson(): string {
-    let filter = new Array();
-    filter[0] = '_id';
-    filter[1] = '_rev';
-    filter[2] = 'title';
-    filter[3] = 'description';
-    return JSON.stringify(this, filter);
-  }
+  get doc_properties(): string[] { return ['_id', '_rev', 'title', 'description']; }
 
+  toJson(): string {
+    return JSON.stringify(this, this.doc_properties);
+  }
 }

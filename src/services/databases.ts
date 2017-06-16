@@ -43,16 +43,14 @@ export class DbService implements IDatabases {
     this._collections['items'] = new ItemsCollection(this, this.zone);
     this._collections['categories_items'] = new CategoriesItemsCollection(this, this.zone);
 
-    //this._initData()
+    this._initData();
   }
 
   private async _initData() {
     console.log('init data')
-    let items = []; //this.itemsCollection;
-    let categories = []; //this.categoriesCollection;
+    let items = [];
+    let categories = [];
     console.log('begin init data')
-    //items.disableEvents();
-    //categories.disableEvents();
     try {
       for(let i = 1; i < 2000; i++){
         console.log('idx = ' + i);
@@ -67,8 +65,6 @@ export class DbService implements IDatabases {
     }
     finally
     {
-      //items.restoreEvents();
-      //categories.restoreEvents();
       this.itemsCollection.addBulk(items);
       this.categoriesCollection.addBulk(categories);
     }
