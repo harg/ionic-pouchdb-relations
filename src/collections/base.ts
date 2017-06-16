@@ -81,7 +81,12 @@ export abstract class BaseCollection<T extends BaseModel> {
   /**
    * renvois tous les éléments de la collection
    */
-  findAll(page: number = 1): Promise<T[]> {
+  findAll(): Promise<T[]> {
+    return this.db.allDocs({ include_docs: true})
+    .then(docs => docs.rows.map(row => row.doc));
+  }
+
+  findAllPerPage(page: number = 1): Promise<T[]> {
     return this.db.allDocs({
       include_docs: true,
       limit: this.perpage,

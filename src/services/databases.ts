@@ -43,7 +43,7 @@ export class DbService implements IDatabases {
     this._collections['items'] = new ItemsCollection(this, this.zone);
     this._collections['categories_items'] = new CategoriesItemsCollection(this, this.zone);
 
-    this._initData();
+    //this._initData();
   }
 
   private async _initData() {

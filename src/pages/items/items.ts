@@ -38,7 +38,7 @@ export class ItemsPage implements OnInit{
 
   loadItems() {
     return new Promise(resolve => {
-      this.dbService.itemsCollection.findAll(this.page)
+      this.dbService.itemsCollection.findAllPerPage(this.page)
       .then(data => {
         return this.dbService.itemsCollection.populateRelationships(data)
       })
